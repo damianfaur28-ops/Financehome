@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FinanceHome</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#1D9E75;--red:#D85A30;--purple:#7F77DD;--blue:#378ADD;--amber:#BA7517;
+  --bg:#F7F6F3;--card:#FFFFFF;--border:rgba(0,0,0,0.08);--text:#1A1A1A;--muted:#888;
+  --radius:14px;--radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:76px}
+.app{max-width:430px;margin:0 auto}
+.page{display:none;padding:16px}
+.page.active{display:block}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-top:8px}
+.app-title{font-size:20px;font-weight:700;color:var(--text)}
+.month-pill{font-size:12px;color:var(--muted);background:var(--card);padding:5px 12px;border-radius:999px;border:1px solid var(--border)}
+.sync-bar{display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 12px;border-radius:var(--radius-sm);margin-bottom:12px}
+.sync-ok{background:#E1F5EE;color:#0F6E56}
+.sync-err{background:#FCEBEB;color:#A32D2D}
+.sync-loading{background:#E6F1FB;color:#185FA5}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.metric{background:var(--card);border-radius:var(--radius);padding:14px 12px;border:1px solid var(--border);cursor:pointer;transition:border-color .15s}
+.metric:active{border-color:var(--purple)}
+.card-expense{background:#FFF5F3;border-color:rgba(216,90,48,0.2)}
+.card-income{background:#F3FBF8;border-color:rgba(29,158,117,0.2)}
+.metric-label{font-size:11px;color:var(--muted);margin-bottom:5px}
+.metric-value{font-size:20px;font-weight:700}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.mv-green{color:var(--green)}.mv-red{color:var(--red)}.mv-purple{color:var(--purple)}.mv-blue{color:var(--blue)}
+.forecast-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.forecast-bar span:first-child{color:var(--muted)}
+.forecast-val{font-weight:700;color:var(--purple)}
+
+/* Bank edit modal */
+.bank-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;padding:20px}
+.bank-modal.show{display:flex}
+.bank-modal-inner{background:var(--card);border-radius:var(--radius);padding:20px;width:100%;max-width:340px}
+.bank-modal-title{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--text)}
+.bank-modal input{width:100%;padding:12px;font-size:18px;font-weight:700;font-family:'Heebo',sans-serif;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--green);outline:none;direction:ltr;text-align:left;margin-bottom:12px}
+.bank-modal-btns{display:flex;gap:8px}
+.bmbtn-ok{flex:1;padding:11px;background:var(--green);border:none;border-radius:var(--radius-sm);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+.bmbtn-cancel{flex:1;padding:11px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-size:14px;cursor:pointer;font-family:'Heebo',sans-serif}
+
+.alert-box{display:none;background:#FFF8EE;border:1px solid #EF9F27;border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.alert-title{font-size:14px;font-weight:700;color:#633806;margin-bottom:6px}
+.alert-body{font-size:12px;color:#854F0B;margin-bottom:12px;line-height:1.7;white-space:pre-line}
+.alert-btns{display:flex;gap:8px}
+.abtn-yes{flex:1;padding:10px;background:var(--amber);border:none;border-radius:var(--radius-sm);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Heebo',sans-serif}
+.abtn-no{flex:1;padding:10px;background:transparent;border:1px solid var(--amber);border-radius:var(--radius-sm);color:#854F0B;font-size:13px;cursor:pointer;font-family:'Heebo',sans-serif}
+.slabel{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;margin-top:6px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.erow{display:flex;gap:8px;margin-bottom:10px}
+.erow input,.erow select{flex:1;min-width:0;padding:11px 12px;font-size:15px;font-family:'Heebo',sans-serif;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none;direction:rtl;-webkit-appearance:none}
+.erow input:focus,.erow select:focus{border-color:var(--purple)}
+.erow input::placeholder{color:#bbb}
+.timing-toggle{display:flex;margin-bottom:10px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg)}
+.ttbtn{flex:1;padding:10px 4px;border:none;background:transparent;font-size:12px;font-weight:500;cursor:pointer;font-family:'Heebo',sans-serif;color:var(--muted);transition:all .15s}
+.ttbtn.active{background:var(--green);color:#fff}
+.timing-note{font-size:12px;padding:7px 10px;border-radius:var(--radius-sm);margin-bottom:10px;line-height:1.5}
+.tn-now{background:#E1F5EE;color:#0F6E56}
+.tn-future{background:#E6F1FB;color:#185FA5}
+.tn-rec{background:#EEEDFE;color:#534AB7}
+.future-fields{display:none}
+.future-fields.show{display:block}
+.auto-cat-bar{display:none;align-items:center;justify-content:space-between;background:#F0EFFF;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;gap:8px;border:1px solid #D0CEFF}
+.auto-cat-bar.show{display:flex}
+.auto-cat-label{font-size:13px;color:#534AB7}
+.auto-cat-label strong{color:#3C3489}
+.auto-cat-btns{display:flex;gap:6px;flex-shrink:0}
+.acb-ok{padding:7px 14px;background:var(--purple);border:none;border-radius:var(--radius-sm);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Heebo',sans-serif}
+.acb-change{padding:7px 10px;background:transparent;border:1px solid #D0CEFF;border-radius:var(--radius-sm);color:#534AB7;font-size:12px;cursor:pointer;font-family:'Heebo',sans-serif}
+.cat-wrap{display:none;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.cpill{padding:7px 13px;border-radius:999px;border:1px solid var(--border);font-size:13px;cursor:pointer;color:var(--muted);background:var(--bg);font-family:'Heebo',sans-serif}
+.cpill.sel{background:var(--purple);color:#fff;border-color:var(--purple)}
+.file-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.file-label{font-size:12px;color:var(--muted);flex-shrink:0}
+.file-name{font-size:12px;color:var(--green);margin-top:2px}
+.btn{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:2px;transition:opacity .15s}
+.btn:active{opacity:.85}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.tx-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border)}
+.tx-item:last-child{border-bottom:none}
+.tx-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:14px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.tx-pending{font-size:10px;color:var(--blue);font-weight:700;margin-top:1px}
+.tx-file{font-size:10px;color:var(--blue);margin-top:1px}
+.tx-amt{font-size:15px;font-weight:700;flex-shrink:0}
+.fixed-item{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--border)}
+.fixed-item:last-child{border-bottom:none}
+.fi-info{flex:1;min-width:0}
+.fi-name{font-size:14px;color:var(--text);font-weight:500}
+.fi-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.fi-amt{font-size:15px;font-weight:700;flex-shrink:0}
+.fi-btns{display:flex;gap:5px;flex-shrink:0}
+.fi-btn{background:none;border:1px solid var(--border);border-radius:7px;cursor:pointer;color:var(--muted);font-size:12px;padding:5px 9px;font-family:'Heebo',sans-serif}
+.edit-form{display:none;background:var(--bg);border-radius:var(--radius-sm);padding:10px;margin-top:8px}
+.edit-form.show{display:block}
+.edit-form input,.edit-form select{width:100%;padding:9px 10px;font-size:14px;font-family:'Heebo',sans-serif;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);direction:rtl;outline:none;margin-bottom:7px;-webkit-appearance:none}
+.edit-save-btn{width:100%;padding:9px;background:var(--purple);border:none;border-radius:var(--radius-sm);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+.sum-cat-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;gap:8px}
+.sum-cat-row:last-of-type{border-bottom:none}
+.sum-cat-name{font-size:14px;color:var(--text);flex:1;font-weight:500}
+.sum-cat-amt{font-size:14px;font-weight:700;color:var(--red);flex-shrink:0}
+.sum-arrow{font-size:11px;color:var(--muted);flex-shrink:0;transition:transform .2s}
+.sum-arrow.open{transform:rotate(180deg)}
+.sum-detail{display:none;background:var(--bg);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:4px}
+.sum-detail.show{display:block}
+.sum-detail-item{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border)}
+.sum-detail-item:last-child{border-bottom:none}
+.total-row{display:flex;justify-content:space-between;padding:10px 0 0}
+.hist-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.hist-month{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px}
+.hist-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:5px}
+.empty-msg{text-align:center;padding:18px;color:var(--muted);font-size:13px}
+
+/* Savings */
+.saving-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.saving-item:last-child{border-bottom:none}
+.saving-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.saving-info{flex:1;min-width:0}
+.saving-name{font-size:14px;font-weight:500;color:var(--text)}
+.saving-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.saving-val{font-size:16px;font-weight:700;color:var(--green);flex-shrink:0}
+.saving-edit-btn{background:none;border:1px solid var(--border);border-radius:7px;cursor:pointer;color:var(--muted);font-size:12px;padding:5px 9px;font-family:'Heebo',sans-serif;flex-shrink:0}
+.savings-total{background:var(--purple);color:#fff;border-radius:var(--radius);padding:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.savings-total-label{font-size:13px;opacity:.85}
+.savings-total-val{font-size:22px;font-weight:700}
+
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-btn{flex:1;padding:10px 2px 10px;border:none;background:transparent;cursor:pointer;font-family:'Heebo',sans-serif;font-size:10px;font-weight:500;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s}
+.nav-btn.active{color:var(--purple)}
+.nav-icon{font-size:20px}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(247,246,243,0.9);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">מתחבר ל-Google Sheets...</div>
+</div>
+
+<!-- Bank edit modal -->
+<div class="bank-modal" id="bank-modal">
+  <div class="bank-modal-inner">
+    <div class="bank-modal-title">עדכון יתרת עו"ש</div>
+    <input type="number" id="bank-modal-input" placeholder="הזן יתרה ₪" inputmode="decimal" />
+    <div class="bank-modal-btns">
+      <button class="bmbtn-ok" onclick="confirmBankBalance()">עדכן</button>
+      <button class="bmbtn-cancel" onclick="closeBankModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- HOME -->
+<div id="p-home" class="page active">
+  <div class="top-bar">
+    <div class="app-title">FinanceHome 🏠</div>
+    <div class="month-pill" id="month-label"></div>
+  </div>
+  <div class="sync-bar sync-loading" id="sync-status">
+    <div class="sync-dot"></div>
+    <span id="sync-text">מתחבר...</span>
+  </div>
+  <div class="alert-box" id="alert-home">
+    <div class="alert-title">⚠️ התראת סוף חודש</div>
+    <div class="alert-body" id="alert-body-home"></div>
+    <div class="alert-btns">
+      <button class="abtn-yes" onclick="approveCharge()">אשר חיוב</button>
+      <button class="abtn-no" onclick="dismissAlert()">אחר כך</button>
+    </div>
+  </div>
+  <div class="metrics">
+    <div class="metric" onclick="openBankModal()">
+      <div class="metric-label">עובר ושב 👆</div>
+      <div class="metric-value mv-green" id="m-bank">₪0</div>
+      <div class="metric-sub">לחץ לעדכון</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">הוצאות חודש</div>
+      <div class="metric-value mv-red" id="m-exp">₪0</div>
+      <div class="metric-sub">משתנות + קבועות</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">מאזן חודשי</div>
+      <div class="metric-value" id="m-inc-net" style="font-size:18px">₪0</div>
+      <div class="metric-sub" id="m-inc-net-sub"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">צפי הכנסות</div>
+      <div class="metric-value mv-purple" id="m-pending">₪0</div>
+      <div class="metric-sub">הכנסות צפויות החודש</div>
+    </div>
+  </div>
+
+  <div class="slabel">הוסף הוצאה</div>
+  <div class="card card-expense">
+    <div class="erow">
+      <input type="number" id="exp-amt" placeholder="סכום ₪" inputmode="decimal" />
+      <input type="text" id="exp-desc" placeholder="תיאור" oninput="liveClassify()" />
+    </div>
+    <div class="auto-cat-bar" id="auto-cat-bar">
+      <span class="auto-cat-label">קטגוריה: <strong id="auto-cat-text"></strong></span>
+      <div class="auto-cat-btns">
+        <button class="acb-ok" onclick="approveExpCat()">אשר</button>
+        <button class="acb-change" onclick="showCatPicker()">שנה</button>
+      </div>
+    </div>
+    <div class="cat-wrap" id="cat-wrap"></div>
+    <div class="file-row">
+      <span class="file-label">קבלה:</span>
+      <div style="flex:1;min-width:0">
+        <input type="file" id="exp-file" accept=".pdf,.jpg,.jpeg,.png" onchange="showFN('exp-file','exp-fname')" style="font-size:12px;width:100%;color:var(--muted)" />
+        <div class="file-name" id="exp-fname"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slabel">הוסף הכנסה</div>
+  <div class="card card-income">
+    <div class="erow">
+      <input type="number" id="inc-amt" placeholder="סכום ₪" inputmode="decimal" />
+      <input type="text" id="inc-src" placeholder="מקור / לקוח" />
+    </div>
+    <div class="timing-toggle">
+      <button class="ttbtn active" id="tt-now" onclick="setTiming('now')">מיידי</button>
+      <button class="ttbtn" id="tt-future" onclick="setTiming('future')">תאריך עתידי</button>
+      <button class="ttbtn" id="tt-recurring" onclick="setTiming('recurring')">קבועה</button>
+    </div>
+    <div class="timing-note tn-now" id="tn-now">נכנסת לחישוב החודש הנוכחי מיד.</div>
+    <div class="future-fields" id="ff-future">
+      <div class="timing-note tn-future" style="margin-bottom:8px">תירשם כצפויה — לא תשפיע על העו"ש עד אישור.</div>
+      <div class="erow" style="margin-bottom:0">
+        <input type="date" id="inc-date" />
+        <input type="text" id="inc-date-label" placeholder='תיאור ("עוד חודשיים")' />
+      </div>
+    </div>
+    <div class="future-fields" id="ff-recurring">
+      <div class="timing-note tn-rec">תתווסף אוטומטית כל חודש.</div>
+    </div>
+    <div class="file-row" style="margin-top:4px">
+      <span class="file-label">חשבונית:</span>
+      <div style="flex:1;min-width:0">
+        <input type="file" id="inc-file" accept=".pdf,.jpg,.jpeg,.png" onchange="showFN('inc-file','inc-fname')" style="font-size:12px;width:100%;color:var(--muted)" />
+        <div class="file-name" id="inc-fname"></div>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="addIncome()">הוסף הכנסה</button>
+  </div>
+
+  <div class="slabel">פעולות אחרונות</div>
+  <div class="card" id="recent-list"><div class="empty-msg">עוד אין פעולות</div></div>
+</div>
+
+<!-- FIXED -->
+<div id="p-fixed" class="page">
+  <div class="top-bar"><div class="app-title">קבועות 📌</div></div>
+  <div class="slabel">הוצאות קבועות</div>
+  <div class="card" id="fixed-exp-list"><div class="empty-msg">עוד אין הוצאות קבועות</div></div>
+  <div class="slabel">הוסף הוצאה קבועה</div>
+  <div class="card">
+    <div class="erow">
+      <input type="text" id="fx-name" placeholder='שם (שכ"ד, Claude...)' />
+      <input type="number" id="fx-amt" placeholder="סכום ₪" inputmode="decimal" />
+    </div>
+    <div class="erow">
+      <input type="number" id="fx-day" placeholder="יום חיוב" min="1" max="31" />
+      <select id="fx-cat"></select>
+    </div>
+    <button class="btn btn-purple" onclick="addFixedExp()">הוסף הוצאה קבועה</button>
+  </div>
+  <div class="slabel">הכנסות קבועות</div>
+  <div class="card" id="fixed-inc-list"><div class="empty-msg">עוד אין הכנסות קבועות</div></div>
+  <div class="slabel">הוסף הכנסה קבועה</div>
+  <div class="card">
+    <div class="erow">
+      <input type="text" id="fxi-name" placeholder='שם (משכורת, שכ"ד...)' />
+      <input type="number" id="fxi-amt" placeholder="סכום ₪" inputmode="decimal" />
+    </div>
+    <div class="erow">
+      <input type="number" id="fxi-day" placeholder="יום כניסה" min="1" max="31" />
+    </div>
+    <button class="btn btn-green" onclick="addFixedInc()">הוסף הכנסה קבועה</button>
+  </div>
+</div>
+
+<!-- MONTHLY -->
+<div id="p-monthly" class="page">
+  <div class="top-bar"><div class="app-title">סיכום חודשי 📊</div></div>
+  <div class="alert-box" id="alert-monthly">
+    <div class="alert-title">⚠️ התראת סוף חודש</div>
+    <div class="alert-body" id="alert-body-monthly"></div>
+    <div class="alert-btns">
+      <button class="abtn-yes" onclick="approveCharge()">אשר חיוב</button>
+      <button class="abtn-no" onclick="dismissAlert()">אחר כך</button>
+    </div>
+  </div>
+  <div style="text-align:center;font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px" id="sum-title"></div>
+  <div class="slabel">הכנסות החודש</div>
+  <div class="card" id="sum-incomes"></div>
+  <div class="slabel">הוצאות משתנות</div>
+  <div class="card" id="sum-variable"></div>
+  <div class="slabel">הוצאות קבועות החודש</div>
+  <div class="card" id="sum-fixed"></div>
+  <div class="card" style="margin-top:-6px">
+    <div class="total-row"><span style="font-size:15px;font-weight:700">סה"כ הוצאות</span><span style="font-size:15px;font-weight:700;color:var(--red)" id="sum-total">₪0</span></div>
+    <div class="total-row" style="padding-top:6px"><span style="font-size:13px;color:var(--muted)">הכנסות שנכנסו</span><span style="font-size:13px;font-weight:700;color:var(--green)" id="sum-inc">₪0</span></div>
+    <div class="total-row" style="padding-top:6px"><span style="font-size:13px;color:var(--muted)">הכנסות צפויות</span><span style="font-size:13px;font-weight:700;color:var(--blue)" id="sum-inc-pending">₪0</span></div>
+    <div class="total-row" style="padding-top:8px;border-top:1px solid var(--border);margin-top:6px"><span style="font-size:14px;font-weight:700">יתרה צפויה</span><span style="font-size:14px;font-weight:700" id="sum-balance">₪0</span></div>
+  </div>
+  <button class="btn btn-outline" style="margin-top:8px" onclick="saveSnapshot()">שמור סיכום לארכיון</button>
+</div>
+
+<!-- SAVINGS -->
+<div id="p-savings" class="page">
+  <div class="top-bar"><div class="app-title">חסכונות 💰</div></div>
+  <div class="savings-total">
+    <div>
+      <div class="savings-total-label">סה"כ חסכונות + עו"ש</div>
+      <div class="savings-total-val" id="savings-total-val">₪0</div>
+    </div>
+    <div style="text-align:left">
+      <div class="savings-total-label">חסכונות בלבד</div>
+      <div style="font-size:16px;font-weight:700;opacity:.85" id="savings-only-val">₪0</div>
+    </div>
+  </div>
+  <div class="slabel">חסכונות והשקעות</div>
+  <div class="card" id="savings-list"><div class="empty-msg">הוסף חסכון ראשון</div></div>
+  <div class="slabel">הוסף / עדכן חסכון</div>
+  <div class="card">
+    <div class="erow">
+      <input type="text" id="sav-type" placeholder="שם החסכון (קרן השתלמות, דירה...)" />
+    </div>
+    <div class="erow">
+      <input type="number" id="sav-amt" placeholder="סכום ₪" inputmode="decimal" />
+      <input type="text" id="sav-owner" placeholder="של מי (דמיאן / דניאל / משותף)" />
+    </div>
+    <div class="erow">
+      <input type="text" id="sav-note" placeholder="הערה (אופציונלי)" />
+    </div>
+    <button class="btn btn-blue" onclick="addSaving()">שמור</button>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="p-history" class="page">
+  <div class="top-bar"><div class="app-title">היסטוריה 📅</div></div>
+  <div class="slabel">סיכומים חודשיים</div>
+  <div id="hist-list"><div class="empty-msg">עוד אין סיכומים שמורים</div></div>
+</div>
+
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="goPage('home',this)"><span class="nav-icon">🏠</span>בית</button>
+  <button class="nav-btn" onclick="goPage('fixed',this)"><span class="nav-icon">📌</span>קבועות</button>
+  <button class="nav-btn" onclick="goPage('monthly',this)"><span class="nav-icon">📊</span>חודשי</button>
+  <button class="nav-btn" onclick="goPage('savings',this)"><span class="nav-icon">💰</span>חסכונות</button>
+  <button class="nav-btn" onclick="goPage('history',this)"><span class="nav-icon">📅</span>היסטוריה</button>
+</nav>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbwIpq97HIotK_wgHNA23C--sJUPU7fnP7Ms-FLKNeajm2QuKwjE3llXCwT2iGph0Ifr/exec';
+const MH=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const ALL_CATS=['מסעדות ובילויים','סופר ופארם','ספורט','אודישנים ופיתוח קול','דלק וחניה','בריאות','חסכון','אפליקציות ואינטרנט','גולדה','בית','בגדים','הוצאות חד פעמיות','אחר'];
+const CS={
+  'מסעדות ובילויים':{c:'#993556',bg:'#FBEAF0'},'סופר ופארם':{c:'#0F6E56',bg:'#E1F5EE'},
+  'ספורט':{c:'#185FA5',bg:'#E6F1FB'},'אודישנים ופיתוח קול':{c:'#534AB7',bg:'#EEEDFE'},
+  'דלק וחניה':{c:'#854F0B',bg:'#FAEEDA'},'בריאות':{c:'#0F6E56',bg:'#E1F5EE'},
+  'חסכון':{c:'#534AB7',bg:'#EEEDFE'},'אפליקציות ואינטרנט':{c:'#185FA5',bg:'#E6F1FB'},
+  'גולדה':{c:'#854F0B',bg:'#FAEEDA'},'בית':{c:'#854F0B',bg:'#FAEEDA'},
+  'בגדים':{c:'#993556',bg:'#FBEAF0'},'הוצאות חד פעמיות':{c:'#5F5E5A',bg:'#F1EFE8'},
+  'אחר':{c:'#5F5E5A',bg:'#F1EFE8'},'הכנסה':{c:'#0F6E56',bg:'#E1F5EE'}
+};
+const BASE_KW={
+  'מסעדות ובילויים':['קפה','מסעדה','פיצה','בר','אוכל','שתיה','קולנוע','פאב','בילוי','סושי','מקדונלד','בורגר','וולט','טעמי','10bis'],
+  'סופר ופארם':['סופר','שופרסל','רמי','קרפור','פארם','תרופה','סבון','ויקטורי','יינות','מכולת','קנין','סופרפארם'],
+  'ספורט':['כושר','ספורט','כדורגל','ריצה','שחייה','טניס','יוגה','חדר כושר','מכבי','הולמס'],
+  'אודישנים ופיתוח קול':['אודישן','שיעור','פיתוח','תיאטרון','הצגה','חזרה','מורה','קאסטינג'],
+  'דלק וחניה':['דלק','חניה','פז','סונול','רכב','מכונית','חניון'],
+  'בריאות':['רופא','קופת','ביטוח','מרפאה','תרופות','אופטיקה','דנטל','לאומית'],
+  'חסכון':['חסכון','פנסיה','קרן','גמל','ביטוח חיים','השקעה'],
+  'אפליקציות ואינטרנט':['ספוטיפיי','נטפליקס','אפל','גוגל','אינטרנט','מנוי','claude','קלוד','פייפל','HOT','yes','bezeq'],
+  'גולדה':['גולדה','וטרינר','כלב','פינוק','מזון לכלב','חיות','זופר'],
+  'בית':['שכר דירה','שכירות','ארנונה','חשמל','מים','גז','ועד בית','אינטרנט בית','ריהוט','שיפוץ'],
+  'בגדים':['בגד','חולצה','מכנס','שמלה','נעל','בגדים','זארה','H&M','אדידס','נייקי'],
+  'הוצאות חד פעמיות':['טיול','מתנה','יום הולדת','חתונה','אירוע']
+};
+
+let txList=[],fixedExpList=[],fixedIncList=[],histList=[],savingsList=[];
+let bankBalance=0,monthApproved={},learnedKW={};
+let pendAmt=0,pendDesc='',pendCat='',manCat='',pendFile='',incTiming='now';
+
+function curMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function txMonth(m){if(!m)return '';const s=String(m);const parts=s.split('-');if(parts.length>=2)return parts[0]+'-'+parts[1].padStart(2,'0');return s;}
+function fmt(n){return '₪'+Math.round(Math.abs(n)).toLocaleString('he-IL');}
+
+// Bank modal
+function openBankModal(){
+  document.getElementById('bank-modal-input').value=bankBalance||'';
+  document.getElementById('bank-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('bank-modal-input').focus(),100);
+}
+function closeBankModal(){document.getElementById('bank-modal').classList.remove('show');}
+function confirmBankBalance(){
+  const v=parseFloat(document.getElementById('bank-modal-input').value);
+  if(isNaN(v))return;
+  bankBalance=v;closeBankModal();saveAll();renderMetrics();
+}
+
+// Sheets API
+async function sheetsRead(sheet){
+  try{
+    const url=API+'?sheet='+encodeURIComponent(sheet)+'&t='+Date.now();
+    const r=await fetch(url);
+    const text=await r.text();
+    const d=JSON.parse(text);
+    return d.ok?d.rows:[];
+  }catch(e){return null;}
+}
+async function sheetsWrite(sheet,rows){
+  try{
+    const r=await fetch(API,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({sheet,action:'write',rows})
+    });
+    const text=await r.text();
+    const d=JSON.parse(text);
+    return d.ok;
+  }catch(e){return false;}
+}
+function setSyncStatus(s,msg){
+  const el=document.getElementById('sync-status');
+  el.className='sync-bar sync-'+s;
+  document.getElementById('sync-text').textContent=msg;
+}
+
+async function loadAll(){
+  document.getElementById('loading-overlay').classList.add('show');
+  setSyncStatus('loading','מתחבר...');
+  try{
+    const [txR,fxeR,fxiR,histR,metaR,learnedR,savR]=await Promise.all([
+      sheetsRead('transactions'),sheetsRead('fixed_expenses'),sheetsRead('fixed_incomes'),
+      sheetsRead('history'),sheetsRead('meta'),sheetsRead('learned'),sheetsRead('savings')
+    ]);
+    if(txR===null){setSyncStatus('err','שגיאת חיבור');document.getElementById('loading-overlay').classList.remove('show');return;}
+
+    txList=txR.slice(1).filter(r=>r[0]).map(r=>({
+      type:r[0],amount:parseFloat(r[1])||0,desc:r[2],cat:r[3],month:r[4],
+      date:r[5],received:r[6]==='true'||r[6]===true,expectedDateLabel:r[7]||'',fileName:r[8]||''
+    }));
+    fixedExpList=fxeR.slice(1).filter(r=>r[0]).map(r=>({name:r[0],amount:parseFloat(r[1])||0,day:parseInt(r[2])||1,cat:r[3]||'אחר'}));
+    fixedIncList=fxiR.slice(1).filter(r=>r[0]).map(r=>({name:r[0],amount:parseFloat(r[1])||0,day:parseInt(r[2])||1}));
+    histList=histR.slice(1).filter(r=>r[0]).map(r=>({month:r[0],label:r[1],income:parseFloat(r[2])||0,variable:parseFloat(r[3])||0,fixed:parseFloat(r[4])||0,balance:parseFloat(r[5])||0}));
+    savingsList=(savR||[]).slice(1).filter(r=>r[0]).map(r=>({type:r[0],amount:parseFloat(r[1])||0,note:r[2]||'',owner:r[3]||'',date:r[4]||''}));
+    if(metaR&&metaR.length>1)metaR.slice(1).forEach(r=>{
+      if(r[0]==='bank')bankBalance=parseFloat(r[1])||0;
+      if(r[0]==='approved'){try{monthApproved=JSON.parse(r[1]||'{}')}catch(e){}}
+    });
+    if(learnedR&&learnedR.length>1)learnedR.slice(1).forEach(r=>{if(r[0])learnedKW[r[0]]=r[1];});
+
+    setSyncStatus('ok','מסונכרן עם Google Sheets ✓');
+    renderAll();checkAlert(false);
+  }catch(e){setSyncStatus('err','שגיאת חיבור');}
+  document.getElementById('loading-overlay').classList.remove('show');
+}
+
+async function saveAll(){
+  setSyncStatus('loading','שומר...');
+  const txRows=[['type','amount','desc','cat','month','date','received','expectedDateLabel','fileName'],
+    ...txList.map(t=>[t.type,t.amount,t.desc,t.cat,t.month,t.date,t.received,t.expectedDateLabel||'',t.fileName||''])];
+  const fxeRows=[['name','amount','day','cat'],...fixedExpList.map(f=>[f.name,f.amount,f.day,f.cat])];
+  const fxiRows=[['name','amount','day'],...fixedIncList.map(f=>[f.name,f.amount,f.day])];
+  const histRows=[['month','label','income','variable','fixed','balance'],...histList.map(h=>[h.month,h.label,h.income,h.variable,h.fixed,h.balance])];
+  const metaRows=[['key','value'],['bank',bankBalance],['approved',JSON.stringify(monthApproved)]];
+  const learnedRows=[['word','cat'],...Object.entries(learnedKW).map(([k,v])=>[k,v])];
+  const savRows=[['type','amount','note','owner','date'],...savingsList.map(s=>[s.type,s.amount,s.note,s.owner,s.date])];
+  const results=await Promise.all([
+    sheetsWrite('transactions',txRows),sheetsWrite('fixed_expenses',fxeRows),
+    sheetsWrite('fixed_incomes',fxiRows),sheetsWrite('history',histRows),
+    sheetsWrite('meta',metaRows),sheetsWrite('learned',learnedRows),
+    sheetsWrite('savings',savRows)
+  ]);
+  setSyncStatus(results.every(Boolean)?'ok':'err',results.every(Boolean)?'נשמר בהצלחה ✓':'שגיאה בשמירה');
+}
+
+// Classify
+function classifyDesc(desc){
+  const d=desc.toLowerCase();
+  if(learnedKW[d])return learnedKW[d];
+  for(const[w,cat]of Object.entries(learnedKW))if(d.includes(w))return cat;
+  for(const[cat,words]of Object.entries(BASE_KW))if(words.some(w=>d.includes(w)))return cat;
+  return '';
+}
+function liveClassify(){
+  const desc=document.getElementById('exp-desc').value.trim();
+  if(desc.length<2){document.getElementById('auto-cat-bar').classList.remove('show');return;}
+  const cat=classifyDesc(desc)||'הוצאות חד פעמיות';
+  pendCat=cat;
+  document.getElementById('auto-cat-text').textContent=cat;
+  document.getElementById('auto-cat-bar').classList.add('show');
+  document.getElementById('cat-wrap').style.display='none';
+}
+function approveExpCat(){
+  const amt=parseFloat(document.getElementById('exp-amt').value);
+  const desc=document.getElementById('exp-desc').value.trim();
+  if(!amt||!desc)return;
+  pendAmt=amt;pendDesc=desc;
+  pendFile=(document.getElementById('exp-file').files[0]||{name:''}).name;
+  commitExp(pendCat);
+}
+function showCatPicker(){document.getElementById('cat-wrap').style.display='flex';document.getElementById('auto-cat-bar').classList.remove('show');}
+function pickCat(el,cat){document.querySelectorAll('.cpill').forEach(p=>p.classList.remove('sel'));el.classList.add('sel');manCat=cat;}
+function confirmManualCat(){
+  const amt=parseFloat(document.getElementById('exp-amt').value);
+  const desc=document.getElementById('exp-desc').value.trim();
+  if(!manCat||!amt||!desc)return;
+  pendAmt=amt;pendDesc=desc;
+  pendFile=(document.getElementById('exp-file').files[0]||{name:''}).name;
+  if(desc&&manCat)learnedKW[desc.toLowerCase()]=manCat;
+  commitExp(manCat);
+}
+function commitExp(cat){
+  txList.push({type:'expense',amount:pendAmt,desc:pendDesc,cat,month:curMonth(),date:new Date().toLocaleDateString('he-IL'),received:true,expectedDateLabel:'',fileName:pendFile});
+  saveAll();renderAll();
+  document.getElementById('exp-amt').value='';
+  document.getElementById('exp-desc').value='';
+  document.getElementById('exp-file').value='';
+  document.getElementById('exp-fname').textContent='';
+  document.getElementById('auto-cat-bar').classList.remove('show');
+  document.getElementById('cat-wrap').style.display='none';
+  pendAmt=0;pendDesc='';pendCat='';manCat='';pendFile='';
+}
+
+// Income
+function setTiming(t){
+  incTiming=t;
+  ['now','future','recurring'].forEach(x=>{
+    document.getElementById('tt-'+x).className='ttbtn'+(t===x?' active':'');
+    const ff=document.getElementById('ff-'+x);
+    if(ff)ff.className='future-fields'+(t===x?' show':'');
+  });
+  document.getElementById('tn-now').style.display=t==='now'?'block':'none';
+}
+function addIncome(){
+  const amt=parseFloat(document.getElementById('inc-amt').value);
+  const src=document.getElementById('inc-src').value.trim();
+  if(!amt||!src)return;
+  const today=new Date();
+  const file=document.getElementById('inc-file').files[0];
+  if(incTiming==='recurring'){
+    fixedIncList.push({name:src,amount:amt,day:today.getDate()});
+  }else{
+    const dateVal=document.getElementById('inc-date').value;
+    const dateLabel=document.getElementById('inc-date-label').value.trim();
+    let month=curMonth(),received=true,expectedDateLabel='';
+    if(incTiming==='future'&&dateVal){
+      const ed=new Date(dateVal);
+      month=ed.getFullYear()+'-'+String(ed.getMonth()+1).padStart(2,'0');
+      received=ed<=today;
+      expectedDateLabel=dateLabel||ed.toLocaleDateString('he-IL');
+    }
+    txList.push({type:'income',amount:amt,desc:src,cat:'הכנסה',month,date:today.toLocaleDateString('he-IL'),received:incTiming==='now'?true:received,expectedDateLabel,fileName:file?file.name:''});
+  }
+  saveAll();renderAll();
+  ['inc-amt','inc-src','inc-date','inc-date-label'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inc-file').value='';
+  document.getElementById('inc-fname').textContent='';
+  setTiming('now');
+}
+
+// Fixed
+function addFixedExp(){
+  const name=document.getElementById('fx-name').value.trim();
+  const amt=parseFloat(document.getElementById('fx-amt').value);
+  const day=parseInt(document.getElementById('fx-day').value)||1;
+  const cat=document.getElementById('fx-cat').value;
+  if(!name||!amt)return;
+  fixedExpList.push({name,amount:amt,day,cat});
+  saveAll();renderFixedExp();renderMetrics();
+  ['fx-name','fx-amt','fx-day'].forEach(id=>document.getElementById(id).value='');
+}
+function addFixedInc(){
+  const name=document.getElementById('fxi-name').value.trim();
+  const amt=parseFloat(document.getElementById('fxi-amt').value);
+  const day=parseInt(document.getElementById('fxi-day').value)||1;
+  if(!name||!amt)return;
+  fixedIncList.push({name,amount:amt,day});
+  saveAll();renderFixedInc();renderMetrics();
+  ['fxi-name','fxi-amt','fxi-day'].forEach(id=>document.getElementById(id).value='');
+}
+function delFixedExp(i){if(!confirm('למחוק '+fixedExpList[i].name+'?'))return;fixedExpList.splice(i,1);saveAll();renderFixedExp();renderMetrics();}
+function delFixedInc(i){if(!confirm('למחוק '+fixedIncList[i].name+'?'))return;fixedIncList.splice(i,1);saveAll();renderFixedInc();renderMetrics();}
+function toggleEditFx(i){const el=document.getElementById('edit-fx-'+i);if(el)el.className=el.className.includes('show')?'edit-form':'edit-form show';}
+function saveEditFx(i){
+  const name=document.getElementById('efx-name-'+i).value.trim();
+  const amt=parseFloat(document.getElementById('efx-amt-'+i).value);
+  const day=parseInt(document.getElementById('efx-day-'+i).value)||fixedExpList[i].day;
+  if(!name||!amt)return;
+  fixedExpList[i]={...fixedExpList[i],name,amount:amt,day};
+  saveAll();renderFixedExp();renderMetrics();
+}
+
+// Savings
+function addSaving(){
+  const type=document.getElementById('sav-type').value.trim();
+  const amt=parseFloat(document.getElementById('sav-amt').value);
+  const note=document.getElementById('sav-note').value.trim();
+  const owner=document.getElementById('sav-owner').value.trim();
+  if(!type||!amt)return;
+  const existing=savingsList.findIndex(s=>s.type===type&&s.owner===owner);
+  if(existing>=0){savingsList[existing]={type,amount:amt,note,owner,date:new Date().toLocaleDateString('he-IL')};}
+  else{savingsList.push({type,amount:amt,note,owner,date:new Date().toLocaleDateString('he-IL')});}
+  saveAll();renderSavings();
+  document.getElementById('sav-type').value='';
+  document.getElementById('sav-amt').value='';
+  document.getElementById('sav-note').value='';
+  document.getElementById('sav-owner').value='';
+}
+function editSaving(i){const el=document.getElementById('edit-sav-'+i);if(el)el.className=el.className.includes('show')?'edit-form':'edit-form show';}
+function saveSavingEdit(i){
+  const type=document.getElementById('esav-type-'+i).value.trim();
+  const amt=parseFloat(document.getElementById('esav-amt-'+i).value);
+  const note=document.getElementById('esav-note-'+i).value.trim();
+  const owner=document.getElementById('esav-owner-'+i).value.trim();
+  if(!type||!amt)return;
+  savingsList[i]={type,amount:amt,note,owner,date:new Date().toLocaleDateString('he-IL')};
+  saveAll();renderSavings();
+}
+function deleteSaving(i){if(!confirm('למחוק?'))return;savingsList.splice(i,1);saveAll();renderSavings();}
+
+function editIncomeAmt(idx){
+  const newAmt=parseFloat(document.getElementById('inc-edit-amt-'+idx).value);
+  if(!newAmt||newAmt<=0)return;
+  txList[idx].amount=newAmt;
+  saveAll();renderMonthly();renderMetrics();
+}
+function cancelIncome(idx){
+  if(!confirm('לבטל הכנסה זו?'))return;
+  txList.splice(idx,1);
+  saveAll();renderMonthly();renderMetrics();renderRecent();
+}
+
+// Alert
+function checkAlert(isMonthly){
+  const m=curMonth();
+  if(monthApproved[m])return;
+  const d=new Date();
+  const daysLeft=new Date(d.getFullYear(),d.getMonth()+1,0).getDate()-d.getDate();
+  if(daysLeft>3)return;
+  const mVarExp=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m).reduce((s,t)=>s+t.amount,0);
+  const fixedTotal=fixedExpList.reduce((s,f)=>s+f.amount,0);
+  const msg=`נותרו ${daysLeft} ימים לסוף החודש.\nהוצאות משתנות: ${fmt(mVarExp)}\nהוצאות קבועות: ${fmt(fixedTotal)}\nסה"כ לחיוב: ${fmt(mVarExp+fixedTotal)}`;
+  const bid=isMonthly?'alert-monthly':'alert-home';
+  const bodyId=isMonthly?'alert-body-monthly':'alert-body-home';
+  document.getElementById(bodyId).textContent=msg;
+  document.getElementById(bid).style.display='block';
+}
+function approveCharge(){
+  const m=curMonth();
+  const mVarExp=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m).reduce((s,t)=>s+t.amount,0);
+  const fixedTotal=fixedExpList.reduce((s,f)=>s+f.amount,0);
+  bankBalance=bankBalance-(mVarExp+fixedTotal);
+  monthApproved[m]=true;
+  saveAll();renderMetrics();dismissAlert();
+}
+function dismissAlert(){
+  document.getElementById('alert-home').style.display='none';
+  document.getElementById('alert-monthly').style.display='none';
+}
+
+// Render
+function renderAll(){renderMetrics();renderRecent();renderFixedExp();renderFixedInc();renderSavings();}
+
+function renderMetrics(){
+  const m=curMonth();
+  const mInc=txList.filter(t=>t.type==='income'&&txMonth(t.month)===m&&t.received).reduce((s,t)=>s+t.amount,0);
+  const fixedIncMonth=fixedIncList.reduce((s,f)=>s+f.amount,0);
+  const totalInc=mInc+fixedIncMonth;
+  const mPending=txList.filter(t=>t.type==='income'&&!t.received).reduce((s,t)=>s+t.amount,0);
+  const today2=new Date().getDate();
+  const fixedIncPending=fixedIncList.filter(f=>f.day>today2).reduce((s,f)=>s+f.amount,0);
+  const totalPending=mPending+fixedIncPending;
+  const mVarExp=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m).reduce((s,t)=>s+t.amount,0);
+  const fixedExpMonth=fixedExpList.reduce((s,f)=>s+f.amount,0);
+  const totalExp=mVarExp+fixedExpMonth;
+  const today=new Date().getDate();
+  const fixedRemaining=fixedExpList.filter(f=>f.day>today).reduce((s,f)=>s+f.amount,0);
+  const balance=totalInc-totalExp;
+  document.getElementById('m-bank').textContent=fmt(bankBalance);
+  document.getElementById('m-exp').textContent=fmt(totalExp);
+  const netEl=document.getElementById('m-inc-net');
+  const netSub=document.getElementById('m-inc-net-sub');
+  if(balance<0){
+    netEl.textContent='-'+fmt(balance);
+    netEl.style.color='var(--red)';
+    netSub.textContent='⚠️ מאזן חודשי שלילי';
+    netSub.style.color='var(--red)';
+  }else{
+    netEl.textContent='+'+fmt(balance);
+    netEl.style.color='var(--blue)';
+    netSub.textContent='';
+    netSub.style.color='';
+  }
+  document.getElementById('m-pending').textContent=fmt(totalPending);
+  document.getElementById('m-forecast').textContent=fmt(bankBalance+mInc-mVarExp-fixedRemaining);
+}
+
+function renderRecent(){
+  const recent=txList.slice(-6).reverse();
+  if(!recent.length){document.getElementById('recent-list').innerHTML='<div class="empty-msg">עוד אין פעולות</div>';return;}
+  document.getElementById('recent-list').innerHTML=recent.map(t=>{
+    const cat=t.type==='income'?'הכנסה':t.cat;
+    const c=CS[cat]||CS['אחר'];
+    const meta=t.type==='income'&&!t.received&&t.expectedDateLabel?'צפוי: '+t.expectedDateLabel:t.date;
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${c.bg};color:${c.c}">${cat[0]}</div>
+      <div class="tx-info">
+        <div class="tx-name">${t.desc}</div>
+        <div class="tx-meta">${cat} · ${meta}</div>
+        ${t.type==='income'&&!t.received?'<div class="tx-pending">טרם נכנס לחשבון</div>':''}
+        ${t.fileName?`<div class="tx-file">📎 ${t.fileName}</div>`:''}
+      </div>
+      <div class="tx-amt" style="color:${t.type==='income'?'var(--green)':'var(--red)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderFixedExp(){
+  const el=document.getElementById('fixed-exp-list');
+  if(!fixedExpList.length){el.innerHTML='<div class="empty-msg">עוד אין הוצאות קבועות</div>';return;}
+  el.innerHTML=fixedExpList.map((f,i)=>`
+    <div class="fixed-item">
+      <div class="fi-info"><div class="fi-name">${f.name}</div><div class="fi-sub">ה-${f.day} לחודש · ${f.cat}</div></div>
+      <div class="fi-amt" style="color:var(--red)">${fmt(f.amount)}</div>
+      <div class="fi-btns">
+        <button class="fi-btn" onclick="toggleEditFx(${i})">עריכה</button>
+        <button class="fi-btn" onclick="delFixedExp(${i})">מחק</button>
+      </div>
+    </div>
+    <div class="edit-form" id="edit-fx-${i}">
+      <input id="efx-name-${i}" value="${f.name}" placeholder="שם" />
+      <input id="efx-amt-${i}" type="number" value="${f.amount}" placeholder="סכום ₪" />
+      <input id="efx-day-${i}" type="number" value="${f.day}" min="1" max="31" placeholder="יום חיוב" />
+      <button class="edit-save-btn" onclick="saveEditFx(${i})">שמור שינויים</button>
+    </div>`).join('');
+}
+
+function renderFixedInc(){
+  const el=document.getElementById('fixed-inc-list');
+  if(!fixedIncList.length){el.innerHTML='<div class="empty-msg">עוד אין הכנסות קבועות</div>';return;}
+  el.innerHTML=fixedIncList.map((f,i)=>`
+    <div class="fixed-item">
+      <div class="fi-info"><div class="fi-name">${f.name}</div><div class="fi-sub">ה-${f.day} לחודש</div></div>
+      <div class="fi-amt" style="color:var(--green)">${fmt(f.amount)}</div>
+      <div class="fi-btns"><button class="fi-btn" onclick="delFixedInc(${i})">מחק</button></div>
+    </div>`).join('');
+}
+
+function renderSavings(){
+  const savTotal=savingsList.reduce((s,v)=>s+v.amount,0);
+  document.getElementById('savings-only-val').textContent=fmt(savTotal);
+  document.getElementById('savings-total-val').textContent=fmt(savTotal+bankBalance);
+  const el=document.getElementById('savings-list');
+  if(!savingsList.length){el.innerHTML='<div class="empty-msg">הוסף חסכון ראשון</div>';return;}
+  el.innerHTML=savingsList.map((s,i)=>`
+    <div class="saving-item">
+      <div class="saving-icon" style="background:#EEEDFE">💰</div>
+      <div class="saving-info">
+        <div class="saving-name">${s.type}${s.owner?' — '+s.owner:''}</div>
+        <div class="saving-sub">${s.note||''}${s.date?' · עודכן '+s.date:''}</div>
+      </div>
+      <div class="saving-val">${fmt(s.amount)}</div>
+      <button class="saving-edit-btn" onclick="editSaving(${i})">עריכה</button>
+    </div>
+    <div class="edit-form" id="edit-sav-${i}">
+      <input id="esav-type-${i}" value="${s.type}" placeholder="שם החסכון" />
+      <input id="esav-amt-${i}" type="number" value="${s.amount}" placeholder="סכום ₪" />
+      <input id="esav-note-${i}" value="${s.note||''}" placeholder="הערה" />
+      <input id="esav-owner-${i}" value="${s.owner||''}" placeholder="של מי" />
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="edit-save-btn" onclick="saveSavingEdit(${i})">שמור</button>
+        <button class="edit-save-btn" style="background:var(--red)" onclick="deleteSaving(${i})">מחק</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleSumDetail(id,arrowId){
+  const el=document.getElementById(id);const ar=document.getElementById(arrowId);
+  if(!el)return;
+  const isOpen=el.classList.contains('show');
+  el.classList.toggle('show',!isOpen);
+  if(ar)ar.classList.toggle('open',!isOpen);
+}
+
+function renderMonthly(){
+  const m=curMonth();
+  const mTx=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m);
+  const mIncTx=txList.filter(t=>t.type==='income'&&txMonth(t.month)===m);
+  const mInc=mIncTx.filter(t=>t.received).reduce((s,t)=>s+t.amount,0);
+  const fixedIncMonth=fixedIncList.reduce((s,f)=>s+f.amount,0);
+  const mIncPending=txList.filter(t=>t.type==='income'&&!t.received).reduce((s,t)=>s+t.amount,0);
+
+  // Render incomes
+  const incHTML=mIncTx.length||fixedIncList.length ? [
+    ...mIncTx.map((t,i)=>{
+      const idx=txList.indexOf(t);
+      return `<div>
+        <div class="sum-cat-row" onclick="toggleSumDetail('inc-d-${i}','inc-a-${i}')">
+          <span class="sum-cat-name">${t.desc}</span>
+          <span style="font-size:14px;font-weight:700;color:var(--green);flex-shrink:0">${t.received?'+':' צפוי '}${fmt(t.amount)}</span>
+          <span class="sum-arrow" id="inc-a-${i}">▼</span>
+        </div>
+        <div class="sum-detail" id="inc-d-${i}">
+          <div class="sum-detail-item"><span>${t.date}${t.received?'':' · טרם נכנס'}</span><span>${fmt(t.amount)}</span></div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <input type="number" id="inc-edit-amt-${idx}" value="${t.amount}" placeholder="סכום חדש" style="flex:1;padding:7px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);direction:ltr" />
+            <button onclick="editIncomeAmt(${idx})" style="padding:7px 12px;background:var(--purple);border:none;border-radius:7px;color:#fff;font-size:12px;cursor:pointer;font-family:'Heebo',sans-serif">עדכן</button>
+            <button onclick="cancelIncome(${idx})" style="padding:7px 10px;background:var(--red);border:none;border-radius:7px;color:#fff;font-size:12px;cursor:pointer;font-family:'Heebo',sans-serif">בטל</button>
+          </div>
+        </div>
+      </div>`;
+    }),
+    ...fixedIncList.map((f,fi)=>`<div class="sum-cat-row"><span class="sum-cat-name">${f.name} (קבועה)</span><span style="font-size:14px;font-weight:700;color:var(--green)">${fmt(f.amount)}</span></div>`)
+  ].join(''):'<div class="empty-msg" style="padding:8px 0">אין הכנסות החודש</div>';
+  const totalInc=mInc+fixedIncMonth;
+  document.getElementById('sum-incomes').innerHTML=incHTML+`<div class="total-row"><span style="font-size:13px;color:var(--muted)">סה"כ הכנסות</span><span style="font-size:13px;font-weight:700;color:var(--green)">${fmt(totalInc)}</span></div>`;
+  let varTotal=0;
+  const varHTML=ALL_CATS.map((cat,ci)=>{
+    const items=mTx.filter(t=>t.cat===cat);
+    if(!items.length)return '';
+    const total=items.reduce((s,t)=>s+t.amount,0);varTotal+=total;
+    const did='vd-'+ci,aid='va-'+ci;
+    const detail=items.map(t=>`<div class="sum-detail-item"><span>${t.desc} · ${t.date}</span><span>${fmt(t.amount)}</span></div>`).join('');
+    return `<div><div class="sum-cat-row" onclick="toggleSumDetail('${did}','${aid}')"><span class="sum-cat-name">${cat}</span><span class="sum-cat-amt">${fmt(total)}</span><span class="sum-arrow" id="${aid}">▼</span></div><div class="sum-detail" id="${did}">${detail}</div></div>`;
+  }).join('')||'<div class="empty-msg" style="padding:8px 0">אין הוצאות משתנות החודש</div>';
+  document.getElementById('sum-variable').innerHTML=varHTML+(varTotal?`<div class="total-row"><span style="font-size:13px;color:var(--muted)">סה"כ משתנות</span><span style="font-size:13px;font-weight:700;color:var(--red)">${fmt(varTotal)}</span></div>`:'');
+
+  let fixedTotal=0;
+  const fixedHTML=fixedExpList.length?fixedExpList.map((f,fi)=>{
+    fixedTotal+=f.amount;
+    const did='fd-'+fi,aid='fa-'+fi;
+    return `<div><div class="sum-cat-row" onclick="toggleSumDetail('${did}','${aid}')"><span class="sum-cat-name">${f.name}</span><span class="sum-cat-amt">${fmt(f.amount)}</span><span class="sum-arrow" id="${aid}">▼</span></div><div class="sum-detail" id="${did}"><div class="sum-detail-item"><span>${f.cat} · ה-${f.day} לחודש</span><span>${fmt(f.amount)}</span></div></div></div>`;
+  }).join(''):'<div class="empty-msg" style="padding:8px 0">הוסף הוצאות קבועות בגיליון קבועות</div>';
+  document.getElementById('sum-fixed').innerHTML=fixedHTML+(fixedTotal?`<div class="total-row"><span style="font-size:13px;color:var(--muted)">סה"כ קבועות</span><span style="font-size:13px;font-weight:700;color:var(--red)">${fmt(fixedTotal)}</span></div>`:'');
+
+  const grand=varTotal+fixedTotal;
+  const totalReceived=mInc+fixedIncMonth;
+  const bal=totalReceived+mIncPending-grand;
+  document.getElementById('sum-total').textContent=fmt(grand);
+  document.getElementById('sum-inc').textContent=fmt(totalReceived);
+  document.getElementById('sum-inc-pending').textContent=fmt(mIncPending)+' (טרם נכנס)';
+  const balEl=document.getElementById('sum-balance');
+  balEl.textContent=bal<0?'-'+fmt(bal):'+'+fmt(bal);
+  balEl.style.color=bal>=0?'var(--green)':'var(--red)';
+}
+
+function renderHistory(){
+  if(!histList.length){document.getElementById('hist-list').innerHTML='<div class="empty-msg">עוד אין סיכומים שמורים</div>';return;}
+  document.getElementById('hist-list').innerHTML=histList.slice().reverse().map(h=>`
+    <div class="hist-card">
+      <div class="hist-month">${h.label}</div>
+      <div class="hist-row"><span>הכנסות</span><span style="color:var(--green);font-weight:700">${fmt(h.income)}</span></div>
+      <div class="hist-row"><span>הוצאות משתנות</span><span style="font-weight:700">${fmt(h.variable)}</span></div>
+      <div class="hist-row"><span>הוצאות קבועות</span><span style="font-weight:700">${fmt(h.fixed)}</span></div>
+      <div class="hist-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px">
+        <span style="font-weight:700">יתרה</span>
+        <span style="font-weight:700;color:${h.balance>=0?'var(--green)':'var(--red)'}">${h.balance<0?'-':'+'}${fmt(h.balance)}</span>
+      </div>
+    </div>`).join('');
+}
+
+async function saveSnapshot(){
+  const m=curMonth();const d=new Date();const label=MH[d.getMonth()]+' '+d.getFullYear();
+  if(histList.find(h=>h.month===m)){alert('סיכום לחודש זה כבר שמור');return;}
+  const mTx=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m);
+  const mInc=txList.filter(t=>t.type==='income'&&txMonth(t.month)===m&&t.received).reduce((s,t)=>s+t.amount,0)+fixedIncList.reduce((s,f)=>s+f.amount,0);
+  const variable=mTx.reduce((s,t)=>s+t.amount,0);
+  const fixed=fixedExpList.reduce((s,f)=>s+f.amount,0);
+  histList.push({month:m,label,income:mInc,variable,fixed,balance:mInc-variable-fixed});
+  await saveAll();renderHistory();alert('הסיכום נשמר!');
+}
+
+function goPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='monthly'){renderMonthly();checkAlert(true);}
+  if(name==='history')renderHistory();
+  if(name==='home')checkAlert(false);
+}
+
+function buildUI(){
+  const d=new Date();
+  document.getElementById('month-label').textContent=MH[d.getMonth()]+' '+d.getFullYear();
+  document.getElementById('sum-title').textContent='סיכום — '+MH[d.getMonth()]+' '+d.getFullYear();
+  document.getElementById('fx-cat').innerHTML=ALL_CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('cat-wrap').innerHTML=ALL_CATS.map(c=>`<div class="cpill" onclick="pickCat(this,'${c}')">${c}</div>`).join('')+
+    `<button class="btn btn-purple" style="margin-top:8px;width:100%" onclick="confirmManualCat()">אשר בחירה</button>`;
+}
+function showFN(inputId,labelId){const f=document.getElementById(inputId).files[0];document.getElementById(labelId).textContent=f?f.name:'';}
+
+buildUI();
+loadAll();
+</script>
+</body>
+</html>
