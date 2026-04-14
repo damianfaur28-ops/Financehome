@@ -24,9 +24,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 .sync-err{background:#FCEBEB;color:#A32D2D}
 .sync-loading{background:#E6F1FB;color:#185FA5}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
-.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .metric{background:var(--card);border-radius:var(--radius);padding:14px 12px;border:1px solid var(--border);cursor:pointer;transition:border-color .15s}
 .metric:active{border-color:var(--purple)}
+.card-expense{background:#FFF5F3;border-color:rgba(216,90,48,0.2)}
+.card-income{background:#F3FBF8;border-color:rgba(29,158,117,0.2)}
 .metric-label{font-size:11px;color:var(--muted);margin-bottom:5px}
 .metric-value{font-size:20px;font-weight:700}
 .metric-sub{font-size:10px;color:var(--muted);margin-top:3px}
@@ -200,21 +202,17 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="metric">
       <div class="metric-label">מאזן חודשי</div>
       <div class="metric-value" id="m-inc-net" style="font-size:18px">₪0</div>
-      <div class="metric-sub" id="m-inc-net-sub">הכנסות פחות הוצאות</div>
+      <div class="metric-sub" id="m-inc-net-sub"></div>
     </div>
     <div class="metric">
       <div class="metric-label">צפי הכנסות</div>
       <div class="metric-value mv-purple" id="m-pending">₪0</div>
-      <div class="metric-sub">טרם נכנס לחשבון</div>
+      <div class="metric-sub">הכנסות צפויות החודש</div>
     </div>
-  </div>
-  <div class="forecast-bar">
-    <span>צפי סוף חודש</span>
-    <span class="forecast-val" id="m-forecast">₪0</span>
   </div>
 
   <div class="slabel">הוסף הוצאה</div>
-  <div class="card">
+  <div class="card card-expense">
     <div class="erow">
       <input type="number" id="exp-amt" placeholder="סכום ₪" inputmode="decimal" />
       <input type="text" id="exp-desc" placeholder="תיאור" oninput="liveClassify()" />
@@ -237,7 +235,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 
   <div class="slabel">הוסף הכנסה</div>
-  <div class="card">
+  <div class="card card-income">
     <div class="erow">
       <input type="number" id="inc-amt" placeholder="סכום ₪" inputmode="decimal" />
       <input type="text" id="inc-src" placeholder="מקור / לקוח" />
@@ -316,6 +314,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
   </div>
   <div style="text-align:center;font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px" id="sum-title"></div>
+  <div class="slabel">הכנסות החודש</div>
+  <div class="card" id="sum-incomes"></div>
   <div class="slabel">הוצאות משתנות</div>
   <div class="card" id="sum-variable"></div>
   <div class="slabel">הוצאות קבועות החודש</div>
@@ -333,29 +333,28 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 <div id="p-savings" class="page">
   <div class="top-bar"><div class="app-title">חסכונות 💰</div></div>
   <div class="savings-total">
-    <span class="savings-total-label">סה"כ חסכונות והשקעות</span>
-    <span class="savings-total-val" id="savings-total-val">₪0</span>
+    <div>
+      <div class="savings-total-label">סה"כ חסכונות + עו"ש</div>
+      <div class="savings-total-val" id="savings-total-val">₪0</div>
+    </div>
+    <div style="text-align:left">
+      <div class="savings-total-label">חסכונות בלבד</div>
+      <div style="font-size:16px;font-weight:700;opacity:.85" id="savings-only-val">₪0</div>
+    </div>
   </div>
   <div class="slabel">חסכונות והשקעות</div>
   <div class="card" id="savings-list"><div class="empty-msg">הוסף חסכון ראשון</div></div>
-  <div class="slabel">הוסף / עדכן</div>
+  <div class="slabel">הוסף / עדכן חסכון</div>
   <div class="card">
     <div class="erow">
-      <select id="sav-type">
-        <option value="קרן השתלמות">קרן השתלמות</option>
-        <option value="קרן פנסיה">קרן פנסיה</option>
-        <option value="תיק מסחר בבורסה">תיק מסחר בבורסה</option>
-        <option value="דירה">דירה</option>
-        <option value="חסכון בנקאי">חסכון בנקאי</option>
-        <option value="אחר">אחר</option>
-      </select>
+      <input type="text" id="sav-type" placeholder="שם החסכון (קרן השתלמות, דירה...)" />
     </div>
     <div class="erow">
       <input type="number" id="sav-amt" placeholder="סכום ₪" inputmode="decimal" />
-      <input type="text" id="sav-note" placeholder="הערה (אופציונלי)" />
+      <input type="text" id="sav-owner" placeholder="של מי (דמיאן / דניאל / משותף)" />
     </div>
     <div class="erow">
-      <input type="text" id="sav-owner" placeholder="שם (דמיאן / דניאל / משותף)" />
+      <input type="text" id="sav-note" placeholder="הערה (אופציונלי)" />
     </div>
     <button class="btn btn-blue" onclick="addSaving()">שמור</button>
   </div>
@@ -379,7 +378,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 </nav>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbxxmqfHRdAC_fQawUfrzVJARgJRQhA2WoWP__wG6urUrQW84LivFGoJiHyrpbbs1zez/exec';
+const API='https://script.google.com/macros/s/AKfycby1NODp1kW3gCFW3TMeo-I8b75nFEDE7PYD3yv_XYCUiM-EPgvOqc4eg70NDDgjmMx0/exec';
 const MH=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const ALL_CATS=['מסעדות ובילויים','סופר ופארם','ספורט','אודישנים ופיתוח קול','דלק וחניה','בריאות','חסכון','אפליקציות ואינטרנט','גולדה','בית','בגדים','הוצאות חד פעמיות','אחר'];
 const CS={
@@ -411,8 +410,8 @@ let bankBalance=0,monthApproved={},learnedKW={};
 let pendAmt=0,pendDesc='',pendCat='',manCat='',pendFile='',incTiming='now';
 
 function curMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function txMonth(m){if(!m)return '';const s=String(m);const parts=s.split('-');if(parts.length>=2)return parts[0]+'-'+parts[1].padStart(2,'0');return s;}
 function fmt(n){return '₪'+Math.round(Math.abs(n)).toLocaleString('he-IL');}
-function fmtSigned(n){return (n<0?'מינוס ':'')+fmt(n);}
 
 // Bank modal
 function openBankModal(){
@@ -616,17 +615,42 @@ function saveEditFx(i){
 
 // Savings
 function addSaving(){
-  const type=document.getElementById('sav-type').value;
+  const type=document.getElementById('sav-type').value.trim();
   const amt=parseFloat(document.getElementById('sav-amt').value);
   const note=document.getElementById('sav-note').value.trim();
   const owner=document.getElementById('sav-owner').value.trim();
-  if(!amt)return;
+  if(!type||!amt)return;
   const existing=savingsList.findIndex(s=>s.type===type&&s.owner===owner);
   if(existing>=0){savingsList[existing]={type,amount:amt,note,owner,date:new Date().toLocaleDateString('he-IL')};}
   else{savingsList.push({type,amount:amt,note,owner,date:new Date().toLocaleDateString('he-IL')});}
   saveAll();renderSavings();
+  document.getElementById('sav-type').value='';
   document.getElementById('sav-amt').value='';
   document.getElementById('sav-note').value='';
+  document.getElementById('sav-owner').value='';
+}
+function editSaving(i){const el=document.getElementById('edit-sav-'+i);if(el)el.className=el.className.includes('show')?'edit-form':'edit-form show';}
+function saveSavingEdit(i){
+  const type=document.getElementById('esav-type-'+i).value.trim();
+  const amt=parseFloat(document.getElementById('esav-amt-'+i).value);
+  const note=document.getElementById('esav-note-'+i).value.trim();
+  const owner=document.getElementById('esav-owner-'+i).value.trim();
+  if(!type||!amt)return;
+  savingsList[i]={type,amount:amt,note,owner,date:new Date().toLocaleDateString('he-IL')};
+  saveAll();renderSavings();
+}
+function deleteSaving(i){if(!confirm('למחוק?'))return;savingsList.splice(i,1);saveAll();renderSavings();}
+
+function editIncomeAmt(idx){
+  const newAmt=parseFloat(document.getElementById('inc-edit-amt-'+idx).value);
+  if(!newAmt||newAmt<=0)return;
+  txList[idx].amount=newAmt;
+  saveAll();renderMonthly();renderMetrics();
+}
+function cancelIncome(idx){
+  if(!confirm('לבטל הכנסה זו?'))return;
+  txList.splice(idx,1);
+  saveAll();renderMonthly();renderMetrics();renderRecent();
 }
 
 // Alert
@@ -636,7 +660,7 @@ function checkAlert(isMonthly){
   const d=new Date();
   const daysLeft=new Date(d.getFullYear(),d.getMonth()+1,0).getDate()-d.getDate();
   if(daysLeft>3)return;
-  const mVarExp=txList.filter(t=>t.type==='expense'&&t.month===m).reduce((s,t)=>s+t.amount,0);
+  const mVarExp=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m).reduce((s,t)=>s+t.amount,0);
   const fixedTotal=fixedExpList.reduce((s,f)=>s+f.amount,0);
   const msg=`נותרו ${daysLeft} ימים לסוף החודש.\nהוצאות משתנות: ${fmt(mVarExp)}\nהוצאות קבועות: ${fmt(fixedTotal)}\nסה"כ לחיוב: ${fmt(mVarExp+fixedTotal)}`;
   const bid=isMonthly?'alert-monthly':'alert-home';
@@ -646,7 +670,7 @@ function checkAlert(isMonthly){
 }
 function approveCharge(){
   const m=curMonth();
-  const mVarExp=txList.filter(t=>t.type==='expense'&&t.month===m).reduce((s,t)=>s+t.amount,0);
+  const mVarExp=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m).reduce((s,t)=>s+t.amount,0);
   const fixedTotal=fixedExpList.reduce((s,f)=>s+f.amount,0);
   bankBalance=bankBalance-(mVarExp+fixedTotal);
   monthApproved[m]=true;
@@ -662,11 +686,14 @@ function renderAll(){renderMetrics();renderRecent();renderFixedExp();renderFixed
 
 function renderMetrics(){
   const m=curMonth();
-  const mInc=txList.filter(t=>t.type==='income'&&t.month===m&&t.received).reduce((s,t)=>s+t.amount,0);
+  const mInc=txList.filter(t=>t.type==='income'&&txMonth(t.month)===m&&t.received).reduce((s,t)=>s+t.amount,0);
   const fixedIncMonth=fixedIncList.reduce((s,f)=>s+f.amount,0);
   const totalInc=mInc+fixedIncMonth;
   const mPending=txList.filter(t=>t.type==='income'&&!t.received).reduce((s,t)=>s+t.amount,0);
-  const mVarExp=txList.filter(t=>t.type==='expense'&&t.month===m).reduce((s,t)=>s+t.amount,0);
+  const today2=new Date().getDate();
+  const fixedIncPending=fixedIncList.filter(f=>f.day>today2).reduce((s,f)=>s+f.amount,0);
+  const totalPending=mPending+fixedIncPending;
+  const mVarExp=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m).reduce((s,t)=>s+t.amount,0);
   const fixedExpMonth=fixedExpList.reduce((s,f)=>s+f.amount,0);
   const totalExp=mVarExp+fixedExpMonth;
   const today=new Date().getDate();
@@ -677,17 +704,17 @@ function renderMetrics(){
   const netEl=document.getElementById('m-inc-net');
   const netSub=document.getElementById('m-inc-net-sub');
   if(balance<0){
-    netEl.textContent='מינוס '+fmt(balance);
+    netEl.textContent='-'+fmt(balance);
     netEl.style.color='var(--red)';
-    netSub.textContent='⚠️ מאזן שלילי החודש';
+    netSub.textContent='⚠️ מאזן חודשי שלילי';
     netSub.style.color='var(--red)';
   }else{
-    netEl.textContent=fmt(balance);
+    netEl.textContent='+'+fmt(balance);
     netEl.style.color='var(--blue)';
-    netSub.textContent='הכנסות פחות הוצאות';
+    netSub.textContent='';
     netSub.style.color='';
   }
-  document.getElementById('m-pending').textContent=fmt(mPending);
+  document.getElementById('m-pending').textContent=fmt(totalPending);
   document.getElementById('m-forecast').textContent=fmt(bankBalance+mInc-mVarExp-fixedRemaining);
 }
 
@@ -743,19 +770,30 @@ function renderFixedInc(){
 }
 
 function renderSavings(){
-  const total=savingsList.reduce((s,v)=>s+v.amount,0);
-  document.getElementById('savings-total-val').textContent=fmt(total);
+  const savTotal=savingsList.reduce((s,v)=>s+v.amount,0);
+  document.getElementById('savings-only-val').textContent=fmt(savTotal);
+  document.getElementById('savings-total-val').textContent=fmt(savTotal+bankBalance);
   const el=document.getElementById('savings-list');
   if(!savingsList.length){el.innerHTML='<div class="empty-msg">הוסף חסכון ראשון</div>';return;}
-  const icons={'קרן השתלמות':'🏦','קרן פנסיה':'👴','תיק מסחר בבורסה':'📈','דירה':'🏠','חסכון בנקאי':'💳','אחר':'💰'};
-  el.innerHTML=savingsList.map(s=>`
+  el.innerHTML=savingsList.map((s,i)=>`
     <div class="saving-item">
-      <div class="saving-icon" style="background:#EEEDFE">${icons[s.type]||'💰'}</div>
+      <div class="saving-icon" style="background:#EEEDFE">💰</div>
       <div class="saving-info">
         <div class="saving-name">${s.type}${s.owner?' — '+s.owner:''}</div>
         <div class="saving-sub">${s.note||''}${s.date?' · עודכן '+s.date:''}</div>
       </div>
       <div class="saving-val">${fmt(s.amount)}</div>
+      <button class="saving-edit-btn" onclick="editSaving(${i})">עריכה</button>
+    </div>
+    <div class="edit-form" id="edit-sav-${i}">
+      <input id="esav-type-${i}" value="${s.type}" placeholder="שם החסכון" />
+      <input id="esav-amt-${i}" type="number" value="${s.amount}" placeholder="סכום ₪" />
+      <input id="esav-note-${i}" value="${s.note||''}" placeholder="הערה" />
+      <input id="esav-owner-${i}" value="${s.owner||''}" placeholder="של מי" />
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="edit-save-btn" onclick="saveSavingEdit(${i})">שמור</button>
+        <button class="edit-save-btn" style="background:var(--red)" onclick="deleteSaving(${i})">מחק</button>
+      </div>
     </div>`).join('');
 }
 
@@ -769,10 +807,36 @@ function toggleSumDetail(id,arrowId){
 
 function renderMonthly(){
   const m=curMonth();
-  const mTx=txList.filter(t=>t.type==='expense'&&t.month===m);
-  const mInc=txList.filter(t=>t.type==='income'&&t.month===m&&t.received).reduce((s,t)=>s+t.amount,0);
+  const mTx=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m);
+  const mIncTx=txList.filter(t=>t.type==='income'&&txMonth(t.month)===m);
+  const mInc=mIncTx.filter(t=>t.received).reduce((s,t)=>s+t.amount,0);
   const fixedIncMonth=fixedIncList.reduce((s,f)=>s+f.amount,0);
   const mIncPending=txList.filter(t=>t.type==='income'&&!t.received).reduce((s,t)=>s+t.amount,0);
+
+  // Render incomes
+  const incHTML=mIncTx.length||fixedIncList.length ? [
+    ...mIncTx.map((t,i)=>{
+      const idx=txList.indexOf(t);
+      return `<div>
+        <div class="sum-cat-row" onclick="toggleSumDetail('inc-d-${i}','inc-a-${i}')">
+          <span class="sum-cat-name">${t.desc}</span>
+          <span style="font-size:14px;font-weight:700;color:var(--green);flex-shrink:0">${t.received?'+':' צפוי '}${fmt(t.amount)}</span>
+          <span class="sum-arrow" id="inc-a-${i}">▼</span>
+        </div>
+        <div class="sum-detail" id="inc-d-${i}">
+          <div class="sum-detail-item"><span>${t.date}${t.received?'':' · טרם נכנס'}</span><span>${fmt(t.amount)}</span></div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <input type="number" id="inc-edit-amt-${idx}" value="${t.amount}" placeholder="סכום חדש" style="flex:1;padding:7px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);direction:ltr" />
+            <button onclick="editIncomeAmt(${idx})" style="padding:7px 12px;background:var(--purple);border:none;border-radius:7px;color:#fff;font-size:12px;cursor:pointer;font-family:'Heebo',sans-serif">עדכן</button>
+            <button onclick="cancelIncome(${idx})" style="padding:7px 10px;background:var(--red);border:none;border-radius:7px;color:#fff;font-size:12px;cursor:pointer;font-family:'Heebo',sans-serif">בטל</button>
+          </div>
+        </div>
+      </div>`;
+    }),
+    ...fixedIncList.map((f,fi)=>`<div class="sum-cat-row"><span class="sum-cat-name">${f.name} (קבועה)</span><span style="font-size:14px;font-weight:700;color:var(--green)">${fmt(f.amount)}</span></div>`)
+  ].join(''):'<div class="empty-msg" style="padding:8px 0">אין הכנסות החודש</div>';
+  const totalInc=mInc+fixedIncMonth;
+  document.getElementById('sum-incomes').innerHTML=incHTML+`<div class="total-row"><span style="font-size:13px;color:var(--muted)">סה"כ הכנסות</span><span style="font-size:13px;font-weight:700;color:var(--green)">${fmt(totalInc)}</span></div>`;
   let varTotal=0;
   const varHTML=ALL_CATS.map((cat,ci)=>{
     const items=mTx.filter(t=>t.cat===cat);
@@ -799,7 +863,7 @@ function renderMonthly(){
   document.getElementById('sum-inc').textContent=fmt(totalReceived);
   document.getElementById('sum-inc-pending').textContent=fmt(mIncPending)+' (טרם נכנס)';
   const balEl=document.getElementById('sum-balance');
-  balEl.textContent=bal<0?'מינוס '+fmt(bal):fmt(bal);
+  balEl.textContent=bal<0?'-'+fmt(bal):'+'+fmt(bal);
   balEl.style.color=bal>=0?'var(--green)':'var(--red)';
 }
 
@@ -813,7 +877,7 @@ function renderHistory(){
       <div class="hist-row"><span>הוצאות קבועות</span><span style="font-weight:700">${fmt(h.fixed)}</span></div>
       <div class="hist-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px">
         <span style="font-weight:700">יתרה</span>
-        <span style="font-weight:700;color:${h.balance>=0?'var(--green)':'var(--red)'}">${h.balance<0?'מינוס ':''} ${fmt(h.balance)}</span>
+        <span style="font-weight:700;color:${h.balance>=0?'var(--green)':'var(--red)'}">${h.balance<0?'-':'+'}${fmt(h.balance)}</span>
       </div>
     </div>`).join('');
 }
@@ -821,8 +885,8 @@ function renderHistory(){
 async function saveSnapshot(){
   const m=curMonth();const d=new Date();const label=MH[d.getMonth()]+' '+d.getFullYear();
   if(histList.find(h=>h.month===m)){alert('סיכום לחודש זה כבר שמור');return;}
-  const mTx=txList.filter(t=>t.type==='expense'&&t.month===m);
-  const mInc=txList.filter(t=>t.type==='income'&&t.month===m&&t.received).reduce((s,t)=>s+t.amount,0)+fixedIncList.reduce((s,f)=>s+f.amount,0);
+  const mTx=txList.filter(t=>t.type==='expense'&&txMonth(t.month)===m);
+  const mInc=txList.filter(t=>t.type==='income'&&txMonth(t.month)===m&&t.received).reduce((s,t)=>s+t.amount,0)+fixedIncList.reduce((s,f)=>s+f.amount,0);
   const variable=mTx.reduce((s,t)=>s+t.amount,0);
   const fixed=fixedExpList.reduce((s,f)=>s+f.amount,0);
   histList.push({month:m,label,income:mInc,variable,fixed,balance:mInc-variable-fixed});
